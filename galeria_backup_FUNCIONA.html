@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Galería</title>
+</head>
+<body>
+
+<h1>Fotos del alumno</h1>
+
+<input id="codigo" placeholder="Ej: alumno_001">
+<button onclick="verFotos()">Ver fotos</button>
+
+<div id="galeria"></div>
+
+<button onclick="comprar()">Comprar selección</button>
+
+<script>
+
+const SUPABASE_URL = "https://yrgwrrqekropjnlycxfb.supabase.co";
+const API_KEY = "sb_publishable_atpzyLUPdoHRrh0b4EkDtg_DqQDxUMy";
+
+// =======================
+// VER FOTOS
+// =======================
+async function verFotos() {
+  const codigo = document.getElementById("codigo").value.trim();
+  const galeria = document.getElementById("galeria");
+
+  if (!codigo) {
+    galeria.innerHTML = "Introduce un código";
+    return;
+  }
+
+  galeria.innerHTML = "Cargando...";
+
+  try {
+    const res = await fetch(
+  `${SUPABASE_URL}/rest/v1/fotos?alumno=eq.${codigo}`,
+  {
+    headers: {
+      "apikey": API_KEY,
+      "Authorization": `Bearer ${API_KEY}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+    if (!res.ok) {
+      throw new Error("Error en la API");
+    }
+
+    const data = await res.json();
+
+    galeria.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      galeria.innerHTML = "No hay fotos";
+      return;
+    }
+
+    data.forEach(foto => {
+      const contenedor = document.createElement("div");
+
+      const img = document.createElement("img");
+
+// 🔥 FORZAMOS STRING + LIMPIEZA REAL
+const nombre = String(foto.nombre).trim();
+
+console.log("NOMBRE REAL:", nombre);
+
+const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${codigo}/${nombre}`;
+
+console.log("URL FINAL BUENA:", url);
+
+img.src = url;
+
+// debug visual
+img.onerror = () => {
+  img.style.border = "3px solid red";
+  console.error("❌ NO CARGA:", url);
+};
+
+      img.style.width = "200px";
+      img.style.display = "block";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = nombre;
+
+      contenedor.appendChild(img);
+      contenedor.appendChild(checkbox);
+
+      contenedor.style.display = "inline-block";
+      contenedor.style.margin = "10px";
+
+      galeria.appendChild(contenedor);
+    });
+
+  } catch (error) {
+    console.error(error);
+    galeria.innerHTML = "Error cargando fotos";
+  }
+}
+
+// =======================
+// COMPRAR
+// =======================
+function comprar() {
+  const checks = document.querySelectorAll("input[type='checkbox']:checked");
+
+  if (checks.length === 0) {
+    alert("No has seleccionado ninguna foto");
+    return;
+  }
+
+  const cantidad = checks.length;
+  const precioPorFoto = 3;
+  const total = cantidad * precioPorFoto;
+
+  let seleccion = [];
+  checks.forEach(c => seleccion.push(c.value));
+
+  const alumno = document.getElementById("codigo").value.trim();
+
+  // Guardar pedido
+  fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": API_KEY,
+      "Authorization": `Bearer ${API_KEY}`
+    },
+    body: JSON.stringify({
+      alumno: alumno,
+      fotos: seleccion.join(", "),
+      total: total
+    })
+  })
+  .then(() => console.log("Pedido guardado"))
+  .catch(err => console.error("Error guardando pedido", err));
+
+  // Stripe
+  const linkStripe = "https://buy.stripe.com/9B69AT6uEa833fibkqdes04";
+  window.location.href = linkStripe + "?quantity=" + cantidad;
+}
+
+</script>
+
+</body>
+</html>
