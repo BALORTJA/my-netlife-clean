@@ -1,1 +1,5 @@
-{"ALUMNO1": "hDTz9E", "ALUMNO2": "Ae1Ai6", "ALUMNO3": "DBky4t"}
+{
+  "ALUMNO1": { "password": "hDTz9E" },
+  "ALUMNO2": { "password": "Ae1Ai6" },
+  "ALUMNO3": { "password": "Dbky4t" }
+}

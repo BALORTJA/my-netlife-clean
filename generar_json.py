@@ -23,7 +23,7 @@ for i, fila in df.iterrows():
     usuario = str(fila["ALUMNO"]).strip().upper()
 
     # Puedes cambiar esto si quieres contraseñas simples
-    password = generar_password()
+    password = usuario
     # password = usuario  ← (opción fácil)
 
     usuarios[usuario] = {
