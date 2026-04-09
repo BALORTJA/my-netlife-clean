@@ -3,131 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <title>Galería</title>
-
   <style>
     body {
       font-family: Arial;
       text-align: center;
+      background: #f5f5f5;
     }
 
-    #galeria img {
-      width: 150px;
+    h1 {
+      margin-top: 20px;
+    }
+
+    #galeria {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    img {
+      width: 200px;
       margin: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    #galeria img:hover {
-      transform: scale(1.05);
-    }
-
-    .seleccionada {
-      border: 3px solid red;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
   </style>
 </head>
+
 <body>
 
-<h1 id="tituloLogin">Login</h1>
+<h1>Tus fotos</h1>
 
-<input id="codigo" placeholder="Código alumno"><br><br>
-<input id="password" type="password" placeholder="Contraseña"><br><br>
-
-<button id="btnLogin" onclick="login()">Entrar</button>
-
-<div id="zonaGaleria" style="display:none;">
-  <h1>Fotos del alumno</h1>
-
-  <div id="resumen">0 fotos seleccionadas - 0€</div><br>
-
-  <div id="galeria"></div>
-
-  <br>
-  <button onclick="comprar()">Comprar</button>
-</div>
+<div id="galeria"></div>
 
 <script>
-let seleccionadas = [];
-let codigoAlumno = "";
+// 🔐 comprobar usuario
+const usuario = localStorage.getItem("usuarioActivo");
 
-// 🔐 LOGIN
-function login() {
-  codigoAlumno = document.getElementById("codigo").value;
-
-  if (!codigoAlumno) {
-    alert("Introduce un código");
-    return;
-  }
-
-  document.getElementById("zonaGaleria").style.display = "block";
-
-  // ocultar login
-  document.getElementById("tituloLogin").style.display = "none";
-  document.getElementById("codigo").style.display = "none";
-  document.getElementById("password").style.display = "none";
-  document.getElementById("btnLogin").style.display = "none";
-
-  verFotos();
+if (!usuario) {
+  alert("No has iniciado sesión");
+  window.location.href = "index.html";
 }
 
-// 📸 CARGAR FOTO DEL ALUMNO
-function verFotos() {
-  const galeria = document.getElementById("galeria");
-  galeria.innerHTML = "";
+// 📁 ruta de fotos
+const ruta = "fotos/" + usuario + "/";
 
-  const alumno = codigoAlumno; // viene del QR
+// ⚠️ AJUSTA estos nombres según tus fotos
+const imagenes = [
+  "1.jpg",
+  "2.jpg",
+  "3.jpg",
+  "4.jpg",
+  "5.jpg"
+];
 
-  const ruta = `fotos/${alumno}/`;
+// 📦 contenedor
+const contenedor = document.getElementById("galeria");
 
-  // probamos cargar muchas posibles fotos
-  for (let i = 0; i < 50; i++) {
-    const img = document.createElement("img");
+// 📸 cargar imágenes
+imagenes.forEach(img => {
+  const imagen = document.createElement("img");
+  imagen.src = ruta + img;
 
-    img.src = ruta + `P${1130000 + i}.jpg`; // nombres tipo cámara
-
-    img.style.width = "150px";
-    img.style.margin = "5px";
-
-    img.onerror = () => img.remove(); // si no existe, la borra
-
-    galeria.appendChild(img);
-  }
-}
-
-  img.onerror = () => {
-    galeria.innerHTML = "<p>No hay fotos para este alumno</p>";
+  imagen.onerror = () => {
+    imagen.style.display = "none"; // si no existe, la oculta
   };
-}
 
-// 🛒 SELECCIÓN
-function toggleSeleccion(url, img) {
-  if (seleccionadas.includes(url)) {
-    seleccionadas = seleccionadas.filter(f => f !== url);
-    img.classList.remove("seleccionada");
-  } else {
-    seleccionadas.push(url);
-    img.classList.add("seleccionada");
-  }
-
-  actualizarResumen();
-}
-
-// 💰 RESUMEN
-function actualizarResumen() {
-  const precio = seleccionadas.length * 5;
-  document.getElementById("resumen").innerText =
-    `${seleccionadas.length} fotos seleccionadas - ${precio}€`;
-}
-
-// 🧾 COMPRA
-function comprar() {
-  if (seleccionadas.length === 0) {
-    alert("Selecciona al menos una foto");
-    return;
-  }
-
-  alert("Compra simulada ✅");
-}
+  contenedor.appendChild(imagen);
+});
 </script>
 
 </body>
