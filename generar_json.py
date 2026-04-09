@@ -1,18 +1,42 @@
 import pandas as pd
 import json
+import os
+import random
+import string
 
-# archivo generado antes
-archivo_excel = "alumnos_con_id.xlsx"
+# 📂 Archivo Excel
+archivo_excel = "alumnos.xlsx"
 
+# 📂 Carpeta salida
+carpeta_salida = "WEB_OK"
+
+# 🔐 Generador de contraseña
+def generar_password():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+
+# 📖 Leer Excel
 df = pd.read_excel(archivo_excel)
 
 usuarios = {}
 
-for _, row in df.iterrows():
-    usuarios[row["Usuario"]] = row["Password"]
+for i, fila in df.iterrows():
+    usuario = str(fila["ALUMNO"]).strip().upper()
 
-# guardar json
-with open("WEB_OK/usuarios.json", "w") as f:
-    json.dump(usuarios, f)
+    # Puedes cambiar esto si quieres contraseñas simples
+    password = generar_password()
+    # password = usuario  ← (opción fácil)
 
-print("✅ usuarios.json creado")
+    usuarios[usuario] = {
+        "password": password
+    }
+
+# 📁 Crear carpeta si no existe
+os.makedirs(carpeta_salida, exist_ok=True)
+
+# 💾 Guardar JSON
+ruta_json = os.path.join(carpeta_salida, "usuarios.json")
+
+with open(ruta_json, "w", encoding="utf-8") as f:
+    json.dump(usuarios, f, indent=2)
+
+print("✅ usuarios.json generado correctamente")
