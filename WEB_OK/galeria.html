@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Galería</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+    }
+
+    #galeria img {
+      width: 150px;
+      margin: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #galeria img:hover {
+      transform: scale(1.05);
+    }
+
+    .seleccionada {
+      border: 3px solid red;
+    }
+  </style>
+</head>
+<body>
+
+<h1 id="tituloLogin">Login</h1>
+
+<input id="codigo" placeholder="Código alumno"><br><br>
+<input id="password" type="password" placeholder="Contraseña"><br><br>
+
+<button id="btnLogin" onclick="login()">Entrar</button>
+
+<div id="zonaGaleria" style="display:none;">
+  <h1>Fotos del alumno</h1>
+
+  <div id="resumen">0 fotos seleccionadas - 0€</div><br>
+
+  <div id="galeria"></div>
+
+  <br>
+  <button onclick="comprar()">Comprar</button>
+</div>
+
+<script>
+let seleccionadas = [];
+let codigoAlumno = "";
+
+// 🔐 LOGIN
+function login() {
+  codigoAlumno = document.getElementById("codigo").value;
+
+  if (!codigoAlumno) {
+    alert("Introduce un código");
+    return;
+  }
+
+  document.getElementById("zonaGaleria").style.display = "block";
+
+  // ocultar login
+  document.getElementById("tituloLogin").style.display = "none";
+  document.getElementById("codigo").style.display = "none";
+  document.getElementById("password").style.display = "none";
+  document.getElementById("btnLogin").style.display = "none";
+
+  verFotos();
+}
+
+// 📸 CARGAR FOTO DEL ALUMNO
+function verFotos() {
+  const galeria = document.getElementById("galeria");
+  galeria.innerHTML = "";
+
+  const alumno = codigoAlumno; // viene del QR
+
+  const ruta = `fotos/${alumno}/`;
+
+  // probamos cargar muchas posibles fotos
+  for (let i = 0; i < 50; i++) {
+    const img = document.createElement("img");
+
+    img.src = ruta + `P${1130000 + i}.jpg`; // nombres tipo cámara
+
+    img.style.width = "150px";
+    img.style.margin = "5px";
+
+    img.onerror = () => img.remove(); // si no existe, la borra
+
+    galeria.appendChild(img);
+  }
+}
+
+  img.onerror = () => {
+    galeria.innerHTML = "<p>No hay fotos para este alumno</p>";
+  };
+}
+
+// 🛒 SELECCIÓN
+function toggleSeleccion(url, img) {
+  if (seleccionadas.includes(url)) {
+    seleccionadas = seleccionadas.filter(f => f !== url);
+    img.classList.remove("seleccionada");
+  } else {
+    seleccionadas.push(url);
+    img.classList.add("seleccionada");
+  }
+
+  actualizarResumen();
+}
+
+// 💰 RESUMEN
+function actualizarResumen() {
+  const precio = seleccionadas.length * 5;
+  document.getElementById("resumen").innerText =
+    `${seleccionadas.length} fotos seleccionadas - ${precio}€`;
+}
+
+// 🧾 COMPRA
+function comprar() {
+  if (seleccionadas.length === 0) {
+    alert("Selecciona al menos una foto");
+    return;
+  }
+
+  alert("Compra simulada ✅");
+}
+</script>
+
+</body>
+</html>

@@ -1,48 +1,68 @@
 import os
 import cv2
 from pyzbar.pyzbar import decode
-from supabase import create_client
+import shutil
 
-# CONFIG
-SUPABASE_URL = "https://yrgwrrqekropjnlycxfb.supabase.co"
-SUPABASE_KEY = "sb_publishable_atpzyLUPdoHRrh0b4EkDtg_DqQDxUMy"
+# 🏫 CONFIG
+COLEGIO = "MARISTAS"
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+CARPETA_FOTOS = "fotos"
+CARPETA_PROCESADO = f"procesado_{COLEGIO}"
+CARPETA_WEB = "WEB_OK/fotos"
 
-FOTOS_FOLDER = "fotos"
+os.makedirs(CARPETA_PROCESADO, exist_ok=True)
+os.makedirs(CARPETA_WEB, exist_ok=True)
 
-print("🚀 INICIO")
+alumno_actual = None
 
-current_student = None
+print("🚀 PROCESO AUTOMÁTICO INICIADO...\n")
 
-for archivo in os.listdir(FOTOS_FOLDER):
-    ruta = os.path.join(FOTOS_FOLDER, archivo)
+archivos = sorted(os.listdir(CARPETA_FOTOS))
 
-    img = cv2.imread(ruta)
-    codigos = decode(img)
+for archivo in archivos:
+    ruta = os.path.join(CARPETA_FOTOS, archivo)
 
-    print("\nProcesando:", archivo)
-
-    # Detectar QR
-    if codigos:
-        current_student = codigos[0].data.decode("utf-8")
-        print("🎯 Alumno detectado:", current_student)
+    if not archivo.lower().endswith((".jpg", ".jpeg", ".png")):
         continue
 
-    # Subir foto si hay alumno
-    if current_student:
-        try:
-            with open(ruta, "rb") as f:
-                file_bytes = f.read()
+    print(f"📂 Procesando: {archivo}")
 
-            file_name = f"{current_student}/{archivo}"
+    img = cv2.imread(ruta)
 
-            supabase.storage.from_("photos").upload(
-                file_name,
-                file_bytes
-            )
+    if img is None:
+        print("❌ Error leyendo imagen")
+        continue
 
-            print("✅ Foto subida para:", current_student)
+    gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    codigos = decode(gris)
 
-        except Exception as e:
-            print("❌ Error subiendo:", e)
+    # 📌 DETECTA QR
+    if codigos:
+        alumno_actual = codigos[0].data.decode("utf-8").strip()
+
+        print(f"🎯 QR detectado → {alumno_actual}")
+
+        # crear carpeta alumno en procesado
+        carpeta_alumno = os.path.join(CARPETA_PROCESADO, alumno_actual)
+        os.makedirs(carpeta_alumno, exist_ok=True)
+
+        # crear carpeta en web
+        carpeta_web = os.path.join(CARPETA_WEB, alumno_actual)
+        os.makedirs(carpeta_web, exist_ok=True)
+
+        continue
+
+    # 📸 FOTO NORMAL
+    if alumno_actual:
+        destino1 = os.path.join(CARPETA_PROCESADO, alumno_actual, archivo)
+        destino2 = os.path.join(CARPETA_WEB, alumno_actual, archivo)
+
+        shutil.copy(ruta, destino1)
+        shutil.copy(ruta, destino2)
+
+        print(f"✅ Foto → {alumno_actual}")
+
+    else:
+        print("⚠️ Foto sin QR previo")
+
+print("\n🎉 TODO LISTO (PROCESADO + WEB)")

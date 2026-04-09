@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gracias</title>
+</head>
+<body>
+
+<h1>✅ Pago completado</h1>
+<p>Guardando pedido...</p>
+
+<script>
+const SUPABASE_URL = "TU_URL";
+const API_KEY = "TU_API_KEY";
+
+const datos = JSON.parse(localStorage.getItem("pedido"));
+
+async function guardar() {
+  if (!datos) return;
+
+  await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
+    method: "POST",
+    headers: {
+      "apikey": API_KEY,
+      "Authorization": `Bearer ${API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(datos)
+  });
+
+  localStorage.removeItem("pedido");
+  document.body.innerHTML += "<p>Pedido guardado ✅</p>";
+}
+
+guardar();
+</script>
+
+</body>
+</html>
