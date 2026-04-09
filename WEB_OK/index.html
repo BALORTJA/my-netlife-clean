@@ -1,226 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Galería Pro</title>
+  <meta charset="UTF-8">
+  <title>Acceso a Fotos</title>
+
   <style>
     body {
       font-family: Arial;
-      text-align: center;
-    }
-
-    #galeria {
+      background: #f5f5f5;
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    .foto {
-      margin: 10px;
-      border: 2px solid transparent;
-      padding: 10px;
+    .login-box {
+      background: white;
+      padding: 30px;
       border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 300px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
 
-    .foto.seleccionada {
-      border: 2px solid green;
-      background: #eaffea;
-    }
-
-    .foto img {
-      width: 200px;
-      border-radius: 10px;
-      display: block;
-    }
-
-    #visor {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: black;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #visor img {
-      max-width: 90%;
-      max-height: 90%;
+    button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 
 <body>
 
-<h2>VERSIÓN PRO</h2>
+<div class="login-box">
+  <h2>Acceso a tus fotos</h2>
 
-<h1>Login</h1>
+  <input type="text" id="usuario" placeholder="Usuario">
+  <input type="password" id="password" placeholder="Contraseña">
 
-<input id="codigo" placeholder="Código alumno"><br><br>
-<input id="password" type="password" placeholder="Contraseña"><br><br>
-
-<button onclick="login()">Entrar</button>
-
-<div id="zonaGaleria" style="display:none;">
-  <h1>Fotos del alumno</h1>
-
-  <div id="resumen">0 fotos seleccionadas - 0€</div><br>
-
-  <div id="galeria"></div>
-
-  <br>
-  <button onclick="comprar()">Comprar</button>
+  <button onclick="login()">Entrar</button>
 </div>
-
-<div id="visor" onclick="cerrarVisor()">
-  <img id="visorImg">
-</div>
-
 
 <script>
+  // 🔥 AUTOCARGAR USUARIO DESDE QR
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-const SUPABASE_URL = "https://yrgwrrqekropjnlycxfb.supabase.co";
-const API_KEY = "sb_publishable_atpzyLUPdoHRrh0b4EkDtg_DqQDxUMy";
-
-let seleccionadas = [];
-let codigoAlumno = "";
-
-// LOGIN
-async function login() {
-  const codigo = document.getElementById("codigo").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if (!codigo || !password) {
-    alert("Introduce código y contraseña");
-    return;
+  if (id) {
+    document.getElementById("usuario").value = id;
   }
 
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/alumnos?codigo=eq.${codigo}&password=eq.${password}`,
-      {
-        headers: {
-          "apikey": API_KEY,
-          "Authorization": `Bearer ${API_KEY}`
-        }
-      }
-    );
+  // 🔐 LOGIN
+  function login() {
+    const usuario = document.getElementById("usuario").value;
+    const password = document.getElementById("password").value;
 
-    const data = await res.json();
+    // ⚠️ DEMO: usuarios en localStorage (luego lo mejoramos)
+    const usuarios = JSON.parse(localStorage.getItem("usuarios")) || {};
 
-    if (data.length === 0) {
-      alert("Datos incorrectos");
-      return;
+    if (usuarios[usuario] === password) {
+      localStorage.setItem("usuarioActivo", usuario);
+      window.location.href = "galeria.html";
+    } else {
+      alert("Usuario o contraseña incorrectos");
     }
-
-    codigoAlumno = codigo;
-
-    document.getElementById("zonaGaleria").style.display = "block";
-
-    verFotos();
-
-  } catch (error) {
-    console.error(error);
-    alert("Error en login");
   }
-}
-
-// CARGAR FOTOS
-async function verFotos() {
-  const galeria = document.getElementById("galeria");
-
-  galeria.innerHTML = "Cargando...";
-  seleccionadas = [];
-  actualizarResumen();
-
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/fotos?alumno=eq.${codigoAlumno}`,
-    {
-      headers: {
-        "apikey": API_KEY,
-        "Authorization": `Bearer ${API_KEY}`
-      }
-    }
-  );
-
-  const data = await res.json();
-
-  galeria.innerHTML = "";
-
-  data.forEach(foto => {
-    const nombre = (foto.nombre || "").trim();
-    const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${codigoAlumno}/${nombre}`;
-
-    const contenedor = document.createElement("div");
-    contenedor.className = "foto";
-
-    const img = document.createElement("img");
-    img.src = url;
-
-    img.onclick = (e) => {
-      e.stopPropagation();
-      abrirVisor(url);
-    };
-
-    contenedor.onclick = () => {
-      contenedor.classList.toggle("seleccionada");
-
-      if (seleccionadas.includes(nombre)) {
-        seleccionadas = seleccionadas.filter(f => f !== nombre);
-      } else {
-        seleccionadas.push(nombre);
-      }
-
-      actualizarResumen();
-    };
-
-    contenedor.appendChild(img);
-    galeria.appendChild(contenedor);
-  });
-}
-
-// RESUMEN
-function actualizarResumen() {
-  const total = seleccionadas.length * 1;
-  document.getElementById("resumen").innerText =
-    `${seleccionadas.length} fotos seleccionadas - ${total}€`;
-}
-
-// VISOR
-function abrirVisor(url) {
-  document.getElementById("visor").style.display = "flex";
-  document.getElementById("visorImg").src = url;
-}
-
-function cerrarVisor() {
-  document.getElementById("visor").style.display = "none";
-}
-
-// COMPRAR
-async function comprar() {
-  if (seleccionadas.length === 0) {
-    alert("Selecciona fotos");
-    return;
-  }
-
-  const codigo = document.getElementById("codigo").value.trim();
-
-  const res = await fetch("http://localhost:3000/create-checkout-session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      cantidad: seleccionadas.length
-    })
-  });
-
-  const data = await res.json();
-
-  window.location.href = data.url;
-}
 </script>
 
 </body>
