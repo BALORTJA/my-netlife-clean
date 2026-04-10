@@ -1,76 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Galería</title>
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #f5f5f5;
-    }
+<meta charset="UTF-8">
+<title>Galería</title>
 
-    h1 {
-      margin-top: 20px;
-    }
-
-    #galeria {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    img {
-      width: 200px;
-      margin: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-  </style>
+<style>
+body { font-family: Arial; text-align: center; }
+#galeria img {
+    width: 200px;
+    margin: 10px;
+    cursor: pointer;
+    border: 3px solid transparent;
+}
+.seleccionada { border: 3px solid red; }
+button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+</style>
 </head>
 
 <body>
 
-<h1>Tus fotos</h1>
+<h2>Tu galería</h2>
+
+<p id="contador">0 fotos seleccionadas</p>
 
 <div id="galeria"></div>
 
+<div id="resumen"></div>
+
+<button id="btnComprar">Pagar</button>
+
 <script>
-// 🔐 comprobar usuario
-const usuario = localStorage.getItem("usuarioActivo");
+
+// 🔐 sesión
+const usuario = localStorage.getItem("usuario");
 
 if (!usuario) {
-  alert("No has iniciado sesión");
-  window.location.href = "index.html";
+    alert("No has iniciado sesión");
+    window.location.href = "index.html";
 }
 
-// 📁 ruta de fotos
-const ruta = "fotos/" + usuario + "/";
-
-// ⚠️ AJUSTA estos nombres según tus fotos
-const imagenes = [
-  "1.jpg",
-  "2.jpg",
-  "3.jpg",
-  "4.jpg",
-  "5.jpg"
-];
-
-// 📦 contenedor
 const contenedor = document.getElementById("galeria");
+const contador = document.getElementById("contador");
+const resumen = document.getElementById("resumen");
+const btn = document.getElementById("btnComprar");
 
-// 📸 cargar imágenes
-imagenes.forEach(img => {
-  const imagen = document.createElement("img");
-  imagen.src = ruta + img;
+let seleccionadas = [];
 
-  imagen.onerror = () => {
-    imagen.style.display = "none"; // si no existe, la oculta
-  };
+const extensiones = ["jpg", "jpeg", "png"];
 
-  contenedor.appendChild(imagen);
+// 📸 cargar fotos
+for (let i = 1; i <= 50; i++) {
+    extensiones.forEach(ext => {
+        const ruta = `fotos/${usuario}/${i}.${ext}`;
+        const img = new Image();
+
+        img.onload = () => {
+
+            img.onclick = () => {
+
+                img.classList.toggle("seleccionada");
+
+                if (seleccionadas.includes(ruta)) {
+                    seleccionadas = seleccionadas.filter(x => x !== ruta);
+                } else {
+                    seleccionadas.push(ruta);
+                }
+
+                actualizarResumen();
+            };
+
+            contenedor.appendChild(img);
+        };
+
+        img.src = ruta;
+    });
+}
+
+// 📊 actualizar resumen
+function actualizarResumen() {
+    contador.innerText = seleccionadas.length + " fotos seleccionadas";
+
+    let precio = seleccionadas.length * 3;
+
+    resumen.innerHTML = `
+        <p>Total: ${seleccionadas.length} fotos</p>
+        <p>Precio: ${precio}€</p>
+    `;
+}
+
+// 💳 BOTÓN STRIPE (CLAVE)
+btn.addEventListener("click", async () => {
+
+    if (seleccionadas.length === 0) {
+        alert("Selecciona al menos una foto");
+        return;
+    }
+
+    try {
+
+        const res = await fetch("http://localhost:3000/crear-checkout", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                cantidad: seleccionadas.length
+            })
+        });
+
+        const data = await res.json();
+
+        console.log("Stripe responde:", data);
+
+        if (!data.url) {
+            alert("Stripe no devolvió URL");
+            return;
+        }
+
+        window.location.href = data.url;
+
+    } catch (error) {
+        console.error(error);
+        alert("Error conectando con Stripe");
+    }
+
 });
+
 </script>
 
 </body>

@@ -1,71 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Acceso a tus fotos</title>
-  <style>
-    body {
-      font-family: Arial;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f5f5f5;
-    }
-    .login {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    input {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      width: 200px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+input {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    width: 200px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+</style>
 </head>
+
 <body>
 
 <div class="login">
-  <h2>Acceso a tus fotos</h2>
-  <input type="text" id="usuario" placeholder="Usuario">
-  <input type="password" id="password" placeholder="Contraseña">
-  <button onclick="login()">Entrar</button>
+    <h2>Acceso a tus fotos</h2>
+
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+
+    <button onclick="login()">Entrar</button>
 </div>
 
 <script>
 async function login() {
-  const usuario = document.getElementById("usuario").value.trim().toUpperCase();
-  const password = document.getElementById("password").value.trim();
+    const usuario = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-  try {
-    const res = await fetch("usuarios.json");
-    const usuarios = await res.json();
+    try {
+        const res = await fetch("usuarios.json");
+        const usuarios = await res.json();
 
-    if (
-      usuarios[usuario] &&
-      usuarios[usuario].password.trim() === password
-    ) {
-      localStorage.setItem("usuario", usuario);
-      window.location.href = "galeria.html";
-    } else {
-      alert("Usuario o contraseña incorrectos");
+        if (usuarios[usuario] && usuarios[usuario].password === password) {
+            
+            // ✅ guardar sesión
+            localStorage.setItem("usuario", usuario);
+
+            // ✅ ir a galería
+            window.location.href = "galeria.html";
+
+        } else {
+            alert("Usuario o contraseña incorrectos");
+        }
+
+    } catch (error) {
+        alert("Error cargando usuarios.json");
+        console.error(error);
     }
-
-  } catch (error) {
-    alert("Error cargando usuarios.json");
-    console.error(error);
-  }
 }
 </script>
 
