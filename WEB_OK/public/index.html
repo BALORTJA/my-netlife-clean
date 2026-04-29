@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Acceso</title>
+</head>
+
+<body style="text-align:center; font-family:Arial; margin-top:100px;">
+
+<h2>Acceso a tus fotos</h2>
+
+<input id="usuario" placeholder="Código alumno"><br><br>
+<button onclick="entrar()">Entrar</button>
+
+<script>
+function entrar() {
+    const usuario = document.getElementById("usuario").value;
+
+    if (!usuario) {
+        alert("Introduce tu código");
+        return;
+    }
+
+    // 👉 Guardamos usuario
+    localStorage.setItem("usuario", usuario);
+
+    // 👉 Ir a galería
+    window.location.href = "galeria.html";
+}
+</script>
+
+</body>
+</html>
